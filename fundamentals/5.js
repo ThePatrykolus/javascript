@@ -18,5 +18,19 @@ var collection = {
   },
 };
 
-//Keep a copy of collection for test
+//Keep a copy of collection for tests
 var collectionCopy = JSON.parse(JSON.stringify(collection));
+
+function updateRecord(id, prop, value) {
+  if (value === "") {
+    delete collection[id][prop];
+  } else if (prop === "tracks") {
+    collection[id][prop] = collection[id][prop] || []; //if the property exists leave it as it is. if it doesn't exist make a property with an empty array
+    collection[id][prop].push(value);
+  } else {
+    collection[id][prop] = value;
+  }
+  return collection;
+}
+
+console.log(updateRecord(5439, "artist", "ABBA"));

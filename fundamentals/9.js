@@ -49,3 +49,28 @@ function checkScope() {
 //also prints "block scope" twice
 
 //const is same as let, but read only
+//however you can mutate an array declared with const
+//CONST DOESNT PREVENT MUTATION
+
+const array = [5, 7, 2];
+array = [1, 2, 3]; //ERROR
+array[0] = 2; //correct
+
+//preventing const mutation by Object.freeze()
+function freezeObj() {
+  "use strict";
+  const MATH_CONSTANTS = {
+    PI: 3.14,
+  };
+
+  Object.freeze(MATH_CONSTANTS);
+
+  try {
+    MATH_CONSTANTS.PI = 99;
+  } catch (ex) {
+    console.log(ex);
+  }
+  return MATH_CONSTANTS.PI;
+}
+
+const PI = freezeObj();

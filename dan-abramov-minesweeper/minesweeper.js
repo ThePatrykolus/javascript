@@ -5,7 +5,12 @@ let canvas = document.getElementById("canvas");
 
 let cells = new Map();
 let revealedKeys = new Set();
-let values = new Map([["0-0", 0], ["0-1", 0], [("1-0", 0)], [("1-1", 0)]]);
+let values = new Map([
+  ["0-0", -1],
+  ["0-1", 1],
+  ["1-0", 2],
+  ["1-1", 3],
+]);
 
 function toKey(row, col) {
   return row + "-" + col;
@@ -18,11 +23,15 @@ function createButtons() {
   for (let i = 0; i < ROWS; i++) {
     for (let j = 0; j < COLS; j++) {
       let cell = document.createElement("button");
-      cell.style.width = SIZE;
-      cell.style.height = SIZE;
-      canvas.appendChild(btn);
+      cell.style.float = "left";
+      cell.style.width = SIZE + "px";
+      cell.style.height = SIZE + "px";
+      cell.onclick = () => {
+        revealCell(key);
+      };
+      canvas.appendChild(cell);
       let key = toKey(i, j);
-      cells.set(key, btn);
+      cells.set(key, cell);
     }
   }
 }
@@ -36,12 +45,37 @@ function updateButtons() {
         cell.disabled = true;
         let value = values.get(key);
         cell.textContent = value.toString();
+        switch (value) {
+          case 0:
+            cell.textContent = "";
+          case 1:
+            cell.style.color = "blue";
+            break;
+          case 2:
+            cell.style.color = "green";
+            break;
+          case 3:
+            cell.style.color = "red";
+            break;
+          case -1:
+            cell.textContent = "💣";
+            cell.style.backgroundColor = "red";
+            break;
+        }
       } else {
         cell.disabled = false;
         cell.textContent = "";
+        cell.style.color = "";
       }
     }
   }
+}
+
+//function updateOneButton(key)
+
+function revealCell(key) {
+  revealedKeys.add(key);
+  updateButtons();
 }
 
 createButtons();

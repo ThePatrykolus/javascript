@@ -5,6 +5,7 @@ const canvas = document.getElementById("canvas");
 
 const cells = new Map();
 const revealedKeys = new Set();
+const flaggedKeys = new Set();
 let map = generateMap(generateBombs());
 
 function toKey(row, col) {
@@ -27,8 +28,16 @@ function createButtons() {
       cell.style.float = "left";
       cell.style.width = SIZE + "px";
       cell.style.height = SIZE + "px";
+      cell.oncontextmenu = (e) => {
+        e.preventDefault();
+        toggleFlag(key);
+        updateButtons(); //rerenders buttons
+      };
       cell.onclick = () => {
-        revealCell(key);
+        if (!flaggedKeys.has(key)) {
+          propagateReveal(key);
+          updateButtons();
+        }
       };
       canvas.appendChild(cell);
       let key = toKey(i, j);
@@ -42,16 +51,21 @@ function updateButtons() {
     for (let j = 0; j < COLS; j++) {
       let key = toKey(i, j);
       let cell = cells.get(key);
+
+      cell.disabled = false;
+      cell.textContent = "";
+      cell.style.color = "";
+      cell.style.backgroundColor = "";
+
       if (revealedKeys.has(key)) {
         cell.disabled = true;
         let value = map.get(key);
         if (value) {
           cell.textContent = value.toString();
         }
-
         switch (value) {
           case undefined:
-            cell.textContent = "";
+          // as is
           case 1:
             cell.style.color = "blue";
             break;
@@ -72,13 +86,14 @@ function updateButtons() {
             break;
           case "bomb":
             cell.textContent = "💣";
-            cell.style.backgroundColor = "red";
+            cell.style.color = "black";
+            // cell.style.backgroundColor = "red";
             break;
+          default:
+            throw Error("Switch value error");
         }
-      } else {
-        cell.disabled = false;
-        cell.textContent = "";
-        cell.style.color = "";
+      } else if (flaggedKeys.has(key)) {
+        cell.textContent = "🚩";
       }
     }
   }
@@ -86,25 +101,23 @@ function updateButtons() {
 
 //function updateOneButton(key)
 
-function revealCell(key) {
-  // revealedKeys.add(key);
-  propagateReveal(key);
-  updateButtons();
+function toggleFlag(key) {
+  if (flaggedKeys.has(key)) {
+    flaggedKeys.delete(key);
+  } else {
+    flaggedKeys.add(key);
+  }
 }
 
 function propagateReveal(key) {
-  // const visited = new Set();
-  console.log("propagate", key);
   revealedKeys.add(key);
-  // visited.add(key);
 
   // if(map.get(key) === undefined)
   const isEmpty = !map.has(key);
   if (isEmpty) {
     for (let neighbourKey of getNeighbour(key)) {
-      // if (!visited.has(key)) {
       if (!revealedKeys.has(neighbourKey)) {
-        propagateReveal(key);
+        propagateReveal(neighbourKey);
       }
     }
   }
@@ -124,23 +137,24 @@ function isInBounds([row, col]) {
 
 function getNeighbour(key) {
   const [row, col] = fromKey(key);
-  const neighbourRowCols = [
-    [row - 1, col - 1],
-    [row - 1, col],
-    [row - 1, col + 1],
-    [row, col - 1],
-    [row, col + 1],
-    [row + 1, col - 1],
-    [row + 1, col],
-    [row + 1, col + 1],
-  ];
-  // for (let i = -1; i <= 1; i++) {
-  //   for (let j = -1; j <= 1; j++) {
-  //     if (i !== 0 && j !== 0) {
-  //       neighbourRowCols.push([row + i, col + j]);
-  //     }
-  //   }
-  // }
+  // const neighbourRowCols = [
+  //   [row - 1, col - 1],
+  //   [row - 1, col],
+  //   [row - 1, col + 1],
+  //   [row, col - 1],
+  //   [row, col + 1],
+  //   [row + 1, col - 1],
+  //   [row + 1, col],
+  //   [row + 1, col + 1],
+  // ];
+  const neighbourRowCols = [];
+  for (let i = -1; i <= 1; i++) {
+    for (let j = -1; j <= 1; j++) {
+      if (!(i === 0 && j === 0)) {
+        neighbourRowCols.push([row + i, col + j]);
+      }
+    }
+  }
   return neighbourRowCols.filter(isInBounds).map(([r, c]) => toKey(r, c));
 }
 
